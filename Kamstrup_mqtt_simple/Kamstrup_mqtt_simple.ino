@@ -35,6 +35,7 @@ void setup() {
   DEBUG_PRINTLN("")
   //Serial.begin(115200);
 
+  WiFi.mode(WIFI_STA); // Set WiFi mode STATION (No need for AP in this project) - Some boards have WIFI_AP_STA as default
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
