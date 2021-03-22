@@ -16,6 +16,8 @@ const char* mqttPassword = "******";
 char mqtt_topic[40] = "kamstrup";
 char conf_key[33] = "******";
 char conf_authkey[33] = "******";
+const int maxFrameFail = 30; // Fails recieved before reboot
+
 
 const size_t headersize = 11;
 const size_t footersize = 3;
@@ -30,10 +32,13 @@ mbedtls_gcm_context m_ctx;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+void(* resetFunc) (void) = 0;
+
 void setup() {
   DEBUG_BEGIN
   DEBUG_PRINTLN("")
   //Serial.begin(115200);
+  WiFi.mode(WIFI_STA); // Use STATION, not AP
 
   WiFi.begin(ssid, password);
 
@@ -44,30 +49,34 @@ void setup() {
   Serial.println("Connected to the WiFi network");
 
   client.setServer(mqttServer, mqttPort);
-  
+
   while (!client.connected()) {
     Serial.println("Connecting to MQTT...");
 
     if (client.connect("ESP8266Client", mqttUser, mqttPassword )) {
 
-      Serial.println("connected");
+      Serial.println("Connected to MQTT");
+      sendmsg(String(mqtt_topic) + "/status/boot", "Build: 2021.03.09 - WiFi: " + String(ssid) + "- MQTT topic: " + String(mqtt_topic));
+      sendmsg(String(mqtt_topic) + "/status/frame", "Initializing (not connected to meter)");
 
     } else {
 
-      Serial.print("failed with state ");
+      Serial.print("MQTT failed with state ");
       Serial.print(client.state());
-      delay(2000);
+      delay(5000);
 
     }
   }
 
   Serial.begin(2400, SERIAL_8N1);
-  Serial.swap();
+  Serial.swap(); // Use GPIO13 for RX (D7 on Wemos D1 mini) instead of GPIO3
   hexStr2bArr(encryption_key, conf_key, sizeof(encryption_key));
   hexStr2bArr(authentication_key, conf_authkey, sizeof(authentication_key));
   Serial.println("Setup completed");
 
 }
+int loopCounter = 1;
+int failCount = 0;
 
 void loop() {
   while (Serial.available() > 0) {
@@ -77,13 +86,31 @@ void loop() {
       VectorView frame = streamParser.getFrame();
       if (streamParser.getContentType() == MbusStreamParser::COMPLETE_FRAME) {
         DEBUG_PRINTLN("Frame complete");
+
+        if (WiFi.status() != WL_CONNECTED) { // if no WiFi, reset the ESP, and hope for reconnect
+          ESP.restart();
+        }
+        // Test mqtt (if state=0 eller while loop - https://pubsubclient.knolleary.net/api#connected 
+        if ( (client.connect("ESP8266Client", mqttUser, mqttPassword ))and (failCount < maxFrameFail) ) {
+          sendmsg(String(mqtt_topic) + "/status/frame", "Frame Compelte");
+        } else {
+          ESP.restart(); 
+        }
+
         if (!decrypt(frame))
         {
           DEBUG_PRINTLN("Decryption failed");
+          ++failCount;
+          sendmsg(String(mqtt_topic) + "/status/frame", "Frame Decrypt FAILED");
+          sendmsg(String(mqtt_topic) + "/status/frame_errors", String(failCount));          
           return;
         }
         MeterData md = parseMbusFrame(decryptedFrame);
         sendData(md);
+        sendmsg(String(mqtt_topic) + "/status/frame_ok", String(loopCounter));
+        if (failCount < 5) failCount = 0; // 5 fails accepted for every 1 good eq 1 measurement a minute
+        delay(8000); // New data only avaible every 10 sec, so sleep for 8 sec.
+        ++loopCounter;
       }
     }
   }
@@ -236,6 +263,6 @@ void hexStr2bArr(uint8_t* dest, const char* source, int bytes_n)
 
 void sendmsg(String topic, String payload) {
   if (client.connected()) {
-    client.publish(topic.c_str(), payload.c_str());    
+    client.publish(topic.c_str(), payload.c_str());
   }
 }
