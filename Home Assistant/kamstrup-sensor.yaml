@@ -1,0 +1,124 @@
+###########################################################################    
+### Sensors ###############################################################
+###########################################################################
+#sensor:
+### Kamstrup Power meter ########################################################
+### Status
+  - platform: mqtt
+    state_topic: "kamstrup/status/frame_errors"
+    name: "kamstrup frame_errors"
+
+  - platform: mqtt
+    state_topic: "kamstrup/status/boot"
+    name: "kamstrup last Boot info"
+
+### Power
+  - platform: mqtt
+    state_topic: "kamstrup/power/activePowerPlus"
+    name: "power_plus"
+    unit_of_measurement: "Watt"
+    device_class: power
+
+  - platform: mqtt
+    state_topic: "kamstrup/power/activePowerMinus"
+    name: "power_minus"
+    unit_of_measurement: "Watt"
+    device_class: power
+
+  - platform: mqtt
+    state_topic: "kamstrup/power/activePowerPlusL1"
+    name: "power_plus_l1"
+    unit_of_measurement: "Watt"
+    device_class: power
+
+  - platform: mqtt
+    state_topic: "kamstrup/power/activePowerPlusL2"
+    name: "power_plus_l2"
+    unit_of_measurement: "Watt"
+    device_class: power
+
+  - platform: mqtt
+    state_topic: "kamstrup/power/activePowerPlusL3"
+    name: "power_plus_l3"
+    unit_of_measurement: "Watt"
+    device_class: power
+
+  - platform: mqtt
+    state_topic: "kamstrup/power/activePowerMinusL3"
+    name: "power_minus_L3"
+    unit_of_measurement: "Watt"
+    device_class: power
+
+    
+### Energy
+  - platform: mqtt
+    state_topic: "kamstrup/energy/activeImportKWh"
+    name: "energy_import"
+    unit_of_measurement: "KWh"
+    device_class: power
+    
+  - platform: mqtt
+    state_topic: "kamstrup/energy/activeExportKWh"
+    name: "energy_export"
+    unit_of_measurement: "KWh"
+    device_class: power
+        
+  - platform: mqtt
+    state_topic: "kamstrup/energy/activeImportKWhL1"
+    name: "energy_import_l1"
+    unit_of_measurement: "KWh"
+    device_class: power
+    
+  - platform: mqtt
+    state_topic: "kamstrup/energy/activeImportKWhL2"
+    name: "energy_import_l2"
+    unit_of_measurement: "KWh"
+    device_class: power
+        
+  - platform: mqtt
+    state_topic: "kamstrup/energy/activeImportKWhL3"
+    name: "energy_import_l3"
+    unit_of_measurement: "KWh"
+    device_class: power
+    
+  - platform: mqtt
+    state_topic: "kamstrup/energy/activeExportKWhL3"
+    name: "energy_export_l3"
+    unit_of_measurement: "KWh"
+    device_class: power
+
+### REactive    
+  - platform: mqtt
+    state_topic: "kamstrup/energy/reactiveImportKWh"
+    name: "energy_reactive_Import"
+    unit_of_measurement: "Kvarh"
+
+  - platform: mqtt
+    state_topic: "kamstrup/energy/reactiveExportKWh"
+    name: "energy_reactive_export"
+    unit_of_measurement: "Kvarh"
+#
+  - platform: mqtt
+    state_topic: "kamstrup/power/reactivePowerPlus"
+    name: "power_reactive_plus"
+    unit_of_measurement: "Watt"
+
+  - platform: mqtt
+    state_topic: "kamstrup/power/reactivePowerMinus"
+    name: "power_reactive_minus"
+    unit_of_measurement: "Watt"
+
+### PowerFactor    
+  - platform: mqtt
+    state_topic: "kamstrup/power/powerFactorL1"
+    name: "power_factorl1"
+    
+  - platform: mqtt
+    state_topic: "kamstrup/power/powerFactorL2"
+    name: "power_factorl2"
+    
+  - platform: mqtt
+    state_topic: "kamstrup/power/powerFactorL3"
+    name: "power_factorl3"
+
+###
